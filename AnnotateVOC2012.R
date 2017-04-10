@@ -24,22 +24,29 @@ for(fname in filenames){
   v = vector()
   for(i in 1:len){
     attr = trimws(toString.XMLNode(root[[i]][[1]][[1]]),"both")
+    
+    #check to see if the node corresponds to an object in the image
     if(attr %in% classes){
       for(j in 1:length(xmlChildren(root[[i]]))){
         #hacky solution, but only bbox nodes have 4 children
         if(xmlSize(root[[i]][[j]])==4){
-          df = cbind(df,xmlToDataFrame(root[[i]][[j]]))
+          column = xmlToDataFrame(root[[i]][[j]])
+          if(!((grepl("2007_",fname)) | (grepl("2008_",fname)))){
+            column = column[c(2,4,1,3),]
+          }
+          df = cbind(df,column)
         }
       }
+      #v is a vector that stores the class to which the object in each bbox belongs
       v = c(v,match(attr,classes))
     }
   }
   df = t(df)
-  #below is a data frame whose rows correspond to each bbox
+  #below is a data frame whose rows correspond to each bbox followed by the class of the object
   df = cbind(df,v)
   rownames(df) = NULL
   colnames(df) = NULL
   
-  #save the data frame
+  #save the data frame as a CSV file whose rows correspond to each bbox (coordinates followed by class)
   write.table(df,file=paste("/Users/rohithkuditipudi/updatedannotations/",gsub(".xml","",fname),".txt",sep=""),quote=FALSE,row.names=FALSE,col.names = FALSE,sep=",")
 }
